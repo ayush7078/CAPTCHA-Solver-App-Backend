@@ -1,4 +1,3 @@
-// models/user.js
 const db = require('../config/db'); // Import the pool
 
 // Get user by username

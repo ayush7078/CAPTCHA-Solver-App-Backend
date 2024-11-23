@@ -1,12 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { pool } = require('./config/db'); // Import the pool from db.js
+const { pool } = require('./config/db'); 
 const captchaRoutes = require('./routes/captchaRoutes');
 
 dotenv.config();
 
-// Create Express app
 const app = express();
 app.use(express.json());
 app.use(cors()); // Enable CORS

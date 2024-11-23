@@ -1,4 +1,3 @@
-// controllers/captchaController.js
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const { getUserByUsername, updateUserCoins } = require('../models/user');
