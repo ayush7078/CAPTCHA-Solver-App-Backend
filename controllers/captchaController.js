@@ -1,10 +1,12 @@
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
-const { getUserByUsername, updateUserCoins } = require('../models/user');
+const User = require('../models/user');
 const dotenv = require('dotenv');
-dotenv.config();
+dotenv.config(); 
 
 const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
+//console.log("RAZORPAY_KEY_ID", process.env );
+
 const razorpay = new Razorpay({
   key_id: RAZORPAY_KEY_ID,
   key_secret: RAZORPAY_KEY_SECRET,
@@ -21,41 +23,33 @@ exports.verifyCaptcha = async (req, res) => {
   const { userAnswer, captchaText } = req.body;
 
   try {
-    // Fetch the user from MySQL
-    getUserByUsername('default_user', (err, user) => {
-      if (err || !user) {
-        return res.status(404).json({ success: false, message: 'User not found!' });
-      }
+    // Fetch the user
+    const user = await User.findOne({ username: 'default_user' });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found!' });
+    }
 
-      if (userAnswer === captchaText) {
-        // Correct answer: Award 15 coins
-        user.coins += 15;
-        updateUserCoins('default_user', user.coins, (err, result) => {
-          if (err) {
-            return res.status(500).json({ success: false, message: 'Error updating coins' });
-          }
-          res.json({ success: true, coins: user.coins, message: 'Correct CAPTCHA!' });
-        });
-      } else {
-        // Incorrect answer: Deduct 10 coins (allowing negative balance)
-        user.coins -= 10;
-        updateUserCoins('default_user', user.coins, (err, result) => {
-          if (err) {
-            return res.status(500).json({ success: false, message: 'Error updating coins' });
-          }
-          res.json({ success: false, coins: user.coins, message: 'Incorrect CAPTCHA!' });
-        });
-      }
-    });
+    if (userAnswer === captchaText) {
+      // Correct answer: Award 15 coins
+      user.coins += 15;
+      await user.save();
+      res.json({ success: true, coins: user.coins, message: 'Correct CAPTCHA!' });
+    } else {
+      // Incorrect answer: Deduct 10 coins (allowing negative balance)
+      user.coins -= 10;
+      await user.save();
+      res.json({ success: false, coins: user.coins, message: 'Incorrect CAPTCHA!' });
+    }
   } catch (error) {
     console.error('Error verifying CAPTCHA:', error);
     res.status(500).json({ success: false, message: 'Internal server error!' });
   }
 };
 
+
 // Razorpay Order
 exports.createOrder = async (req, res) => {
-  const amountInRupees = req.body.amount;
+  const amountInRupees = req.body.amount; // Amount in INR
   const amountInPaise = amountInRupees * 100; // Convert INR to paise (100 paise = 1 INR)
 
   const options = {
@@ -76,6 +70,7 @@ exports.createOrder = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
   const { paymentId, orderId, signature } = req.body;
 
+  // Generate the signature to verify
   const generatedSignature = crypto
     .createHmac('sha256', RAZORPAY_KEY_SECRET)
     .update(orderId + '|' + paymentId)
@@ -83,25 +78,23 @@ exports.verifyPayment = async (req, res) => {
 
   if (generatedSignature === signature) {
     try {
-      // Find the user
-      getUserByUsername('default_user', (err, user) => {
-        if (err || !user) {
-          return res.status(404).json({ success: false, message: 'User not found!' });
-        }
+      // Find the user (assuming 'default_user' is the user who is making the payment)
+      const user = await User.findOne({ username: 'default_user' });
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found!' });
+      }
 
-        // Calculate coins based on amount
-        const order = razorpay.orders.fetch(orderId);
-        const amountInRupees = order.amount / 100; // Convert paise to INR
-        const coinsToAward = amountInRupees;
+      // Calculate the number of coins based on the amount in INR
+      const order = await razorpay.orders.fetch(orderId);
+      const amountInRupees = order.amount / 100; // Convert paise back to INR
+      const coinsToAward = amountInRupees; // 1 INR = 1 Coin
 
-        user.coins += coinsToAward;
-        updateUserCoins('default_user', user.coins, (err, result) => {
-          if (err) {
-            return res.status(500).json({ success: false, message: 'Error updating coins' });
-          }
-          res.json({ success: true, coins: user.coins, message: 'Payment verified and coins awarded!' });
-        });
-      });
+      // Add the coins to the user's balance
+      user.coins += coinsToAward;
+      await user.save();
+
+      // Respond with the success message and updated coin balance
+      res.json({ success: true, coins: user.coins, message: 'Payment verified and coins awarded!' });
     } catch (error) {
       console.error('Error during payment verification:', error);
       res.status(500).json({ success: false, message: 'Error during payment verification' });
@@ -111,15 +104,14 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
-// Get user coins
+
 exports.getDefaultUserCoins = async (req, res) => {
   try {
-    getUserByUsername('default_user', (err, user) => {
-      if (err || !user) {
-        return res.status(404).json({ success: false, message: 'User not found!' });
-      }
-      res.json({ success: true, coins: user.coins });
-    });
+    const user = await User.findOne({ username: 'default_user' });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found!' });
+    }
+    res.json({ success: true, coins: user.coins });
   } catch (error) {
     console.error('Error fetching user coins:', error);
     res.status(500).json({ success: false, message: 'Server error!' });
