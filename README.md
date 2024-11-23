@@ -6,15 +6,15 @@ This project implements a CAPTCHA solver that rewards users with coins for solvi
 
 - **CAPTCHA Generation and Verification**: Users can solve CAPTCHAs to earn coins. Correct answers award coins, while incorrect answers deduct coins.
 - **Payment Gateway Integration**: Razorpay is used to create orders, verify payments, and award coins based on the payment amount.
-- **MongoDB Integration**: The application stores user data, including coins, in a MongoDB database.
+- **MySQL Integration**: The application stores user data, including coins, in a MySQL database.
 - **Express.js Server**: The backend is powered by Express.js to handle routes and API requests.
-- **Environment Variables**: The application uses `.env` files for configuration (e.g., MongoDB URI, Razorpay credentials).
+- **Environment Variables**: The application uses `.env` files for configuration (e.g., MySQL URI, Razorpay credentials).
 
 ## Technologies Used
 
 - **Node.js**
 - **Express.js**
-- **MongoDB**
+- **MySQL**
 - **Razorpay**
 - **dotenv** for environment variables
 - **crypto** for secure random generation and hashing
@@ -35,10 +35,15 @@ npm install
 3. Set up environment variables
 - Create a .env file in the root directory and add the following environment variables:
 
-MONGO_URI=mongodb://localhost:27017/captcha_solver
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=captcha_solver
 PORT=5000
 RAZORPAY_KEY_ID= razorpay_key_id
 RAZORPAY_KEY_SECRET=razorpay_key_secret
+
 Replace razorpay_key_id and razorpay_key_secret with your Razorpay credentials.
 
 4. Run the application
@@ -89,17 +94,18 @@ Retrieves the current number of coins for the default user.
 ├── controllers/
 │   └── captchaController.js      # Contains the business logic for CAPTCHA and payment
 ├── models/
-│   └── user.js                   # Mongoose model for user data (username, coins)
+│   └── user.js                   # Sequelize model for user data (username, coins)
 ├── routes/
 │   └── captchaRoutes.js          # API routes for CAPTCHA and Razorpay operations
 ├── config/
-│   └── db.js                     # Database connection configuration
+│   └── db.js                     # Database connection configuration (MySQL)
 ├── .env                           # Environment variables (DO NOT commit to GitHub)
 ├── server.js                      # Entry point for the application
 ├── package.json                   # Project metadata and dependencies
 └── README.md                      # Documentation
 
 
-Notes
-Make sure MongoDB is installed and running on your local machine or use a cloud database provider.
-For Razorpay integration, you need to have a Razorpay account to get the API keys.
+## Notes
+1. Make sure MySQL is installed and running on your local machine or use a cloud MySQL database provider like AWS RDS or DigitalOcean Managed Databases.
+2. For Razorpay integration, you need to have a Razorpay account to get the API keys.
+3. The project uses MySQL to store user information, including coins, and MySQL queries are handled using the mysql2 package. Ensure you configure the correct MySQL connection in the .env file.
