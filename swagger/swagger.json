@@ -1,0 +1,226 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CAPTCHA Solver with Coin Reward System",
+    "description": "An APIs for CAPTCHA Solver with Coin Reward System",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://captcha-solver-app-backend.onrender.com/api",
+      "description": "Live development server or URL"
+    },
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/captcha": {
+      "get": {
+        "summary": "Generate CAPTCHA",
+        "description": "Generates a CAPTCHA with text and an ID.",
+        "responses": {
+          "200": {
+            "description": "CAPTCHA generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptchaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/captcha/verify": {
+      "post": {
+        "summary": "Verify CAPTCHA",
+        "description": "Verifies the submitted CAPTCHA text and updates user coins.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptchaVerificationRequest"
+              },
+              "example": {
+                "userAnswer": "abcd12",
+                "captchaText": "abcd12"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CAPTCHA verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptchaVerificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "CAPTCHA verification failed"
+          }
+        }
+      }
+    },
+    "/create-order": {
+      "post": {
+        "summary": "Create Razorpay Order",
+        "description": "Creates a payment order using Razorpay.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              },
+              "example": {
+                "amount": 500
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Order creation failed"
+          }
+        }
+      }
+    },
+    "/payment-success": {
+      "post": {
+        "summary": "Verify Payment",
+        "description": "Verifies a Razorpay payment and awards coins to the user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentVerificationRequest"
+              },
+              "example": {
+                "paymentId": "pay_123abc",
+                "orderId": "order_456def",
+                "signature": "sig_789ghi"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentVerificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payment verification failed"
+          }
+        }
+      }
+    },
+    "/user/coins": {
+      "get": {
+        "summary": "Get User Coins",
+        "description": "Retrieves the coin balance for the default user.",
+        "responses": {
+          "200": {
+            "description": "User coins retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCoinsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CaptchaResponse": {
+        "type": "object",
+        "properties": {
+          "captchaText": { "type": "string" },
+          "id": { "type": "string" }
+        }
+      },
+      "CaptchaVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "userAnswer": { "type": "string" },
+          "captchaText": { "type": "string" }
+        }
+      },
+      "CaptchaVerificationResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "coins": { "type": "integer" },
+          "message": { "type": "string" }
+        }
+      },
+      "OrderRequest": {
+        "type": "object",
+        "properties": {
+          "amount": { "type": "integer", "description": "Amount in INR" }
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string" },
+          "key_id": { "type": "string" }
+        }
+      },
+      "PaymentVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "paymentId": { "type": "string" },
+          "orderId": { "type": "string" },
+          "signature": { "type": "string" }
+        }
+      },
+      "PaymentVerificationResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "coins": { "type": "integer" },
+          "message": { "type": "string" }
+        }
+      },
+      "UserCoinsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "coins": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
