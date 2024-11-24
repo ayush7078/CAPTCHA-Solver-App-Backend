@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const { connectDB } = require('./config/db');
 const captchaRoutes = require('./routes/captchaRoutes');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger/swagger.json'); // Path to swagger.json file
+const swaggerDocument = require('./swagger/swagger.json'); 
 
 dotenv.config();
 connectDB();

@@ -56,10 +56,13 @@ exports.createOrder = async (req, res) => {
     amount: amountInPaise, // Razorpay requires amount in paise
     currency: 'INR',
     receipt: `receipt_${crypto.randomBytes(8).toString('hex')}`,
+    payment_capture: 1
   };
 
   try {
+    
     const order = await razorpay.orders.create(options);
+    
     res.json({ orderId: order.id, key_id: RAZORPAY_KEY_ID });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating Razorpay order', error });
